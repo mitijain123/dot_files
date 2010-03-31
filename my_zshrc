@@ -25,8 +25,8 @@ PR_NO_COLOUR="%{$terminfo[sgr0]%}"
 
 
 function precmd() {
-    if [[ -d '.git' ]];then
-	head_info=`cat .git/HEAD`
+    head_info=$(git symbolic-ref HEAD 2> /dev/null)
+    if [[ $head_info =~ '^refs*' ]]; then
 	branch_name=$head_info[(ws:/:)-1]
 	PROMPT='%2~ $PR_RED$ZSH_THEME_GIT_PROMPT_PREFIX$PR_NO_COLOUR$PR_GREEN$branch_name$PR_NO_COLOUR$PR_RED$ZSH_THEME_GIT_PROMPT_SUFFIX$PR_NO_COLOUR> '
     else
@@ -92,6 +92,21 @@ if [ -f ~/.ssh/known_hosts ]; then
   zstyle ':completion:*:*:(ssh|scp):*:*' hosts `sed 's/^\([^ ,]*\).*$/\1/' ~/.ssh/known_hosts`
 fi
 #end of completion related stuff
+
+# Aliases
+alias g='git'
+alias gst='git status'
+alias gl='git pull'
+alias gup='git fetch && git rebase'
+alias gp='git push'
+alias gd='git diff | mate'
+alias gdv='git diff -w "$@" | vim -R -'
+alias gc='git commit -v'
+alias gca='git commit -v -a'
+alias gb='git branch'
+alias gba='git branch -a'
+alias gcount='git shortlog -sn'
+alias gcp='git cherry-pick'
 
 alias psr="ps axu|grep ruby"
 alias ..2="cd ../.."
