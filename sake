@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require "rubygems"
+require "rake"
+require "colored"
+require "fileutils"
+
+include FileUtils
+
+Rake.application.init("sake")
+
+desc "Push current branch"
+task :gp do
+  branch_name = @git_help.current_branch
+  puts "Pushing branch #{branch_name}"
+  system("git push origin #{branch_name}")
+end
+
+desc "Merge remote of current with current branch"
+task :gm do
+  branch_name = @git_help.current_branch
+  puts "Merging origin/#{branch_name} with #{branch_name}"
+  system("git merge origin/#{branch_name}")
+end
+
+desc "Globally available task list"
+task :default do
+  Rake.application.tasks.each do |task|
+    puts sprintf("%-25s : %s",task.name.bold.red,task.comment.blue)
+  end
+end
+
+desc "Update solaro"
+task :sl do
+  solaro_dir = File.join(ENV['HOME'],'checkout','solaro')
+  cd(solaro_dir) do 
+    system("git fetch")
+    Rake.application.invoke_task("gm")
+  end
+end
+
+module Sake
+  class Git
+    def current_branch
+      cmd_output = `git symbolic-ref HEAD`
+      branch_name = cmd_output.strip.split("/")[-1]
+      branch_name
+    end
+  end
+end
+@git_help = Sake::Git.new()
+
+Rake.application.top_level()
+
+
+
+
