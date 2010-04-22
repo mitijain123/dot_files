@@ -28,7 +28,12 @@ function precmd() {
     head_info=$(git symbolic-ref HEAD 2> /dev/null)
     if [[ $head_info =~ '^refs*' ]]; then
 	branch_name=$head_info[(ws:/:)-1]
-	PROMPT='%2~ $PR_RED$ZSH_THEME_GIT_PROMPT_PREFIX$PR_NO_COLOUR$PR_GREEN$branch_name$PR_NO_COLOUR$PR_RED$ZSH_THEME_GIT_PROMPT_SUFFIX$PR_NO_COLOUR> '
+	output=$(git diff-files --exit-code --quiet)
+	if [[ $? == 0 ]]; then
+	    PROMPT='%2~ $PR_RED$ZSH_THEME_GIT_PROMPT_PREFIX$PR_NO_COLOUR$PR_GREEN$branch_name$PR_NO_COLOUR$PR_RED$ZSH_THEME_GIT_PROMPT_SUFFIX$PR_NO_COLOUR$PR_CYAN>$PR_NO_COLOUR '
+	else
+	    PROMPT='%2~ $PR_RED$ZSH_THEME_GIT_PROMPT_PREFIX$PR_NO_COLOUR$PR_GREEN$branch_name$PR_NO_COLOUR$PR_RED$ZSH_THEME_GIT_PROMPT_SUFFIX$PR_NO_COLOUR$PR_MAGENTA*$PR_NO_COLOUR '
+	fi
     else
 	PROMPT='%2~> '
     fi
