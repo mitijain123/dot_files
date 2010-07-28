@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 require "rubygems"
 require "rake"
+require "rake/tasklib"
 require "colored"
 require "fileutils"
+require "mysql"
 
 class Object
   def blank?
@@ -75,6 +77,13 @@ task :gm do
   system("git merge origin/#{branch_name}")
 end
 
+desc "Rebase remote of current with current branch"
+task :gb do
+  branch_name = @git_help.current_branch
+  puts "Rebasing origin/#{branch_name} with #{branch_name}"
+  system("git rebase origin/#{branch_name}")
+end
+
 desc "Show diff"
 task :gd do
   system("git diff")
@@ -111,6 +120,8 @@ task :slu do
   cd(payment_dir) { system("git fetch") }
   solaro_revision_dir = File.join(ENV['HOME'],'solaro_revision')
   cd(solaro_revision_dir) { system("git fetch") }
+  gitosis_dir = File.join(ENV['HOME'],'gitosis-admin')
+  cd(gitosis_dir) { system("git fetch") }
 end
 
 desc "Globally available task list"
@@ -129,6 +140,26 @@ task :sl do
   end
 end
 
+desc "truncate db"
+task :dbt do
+  db = ENV['db']
+  username = ENV['user'] || 'root'
+  password = ENV['password'] || ''
+  host = ENV['host'] || 'localhost'
+
+  if not db.blank?
+    db_util = Sake::Database.new()
+    db_util.truncate_db(db,username,password,host)
+  else
+    abort("Please supply db name to truncate")
+  end
+end
+
+desc "Run ruby"
+task :run_ruby do
+  ruby "~/checkout/solaro/sandbox/benchmark_find_select.rb"
+end
+
 module Sake
   class Git
     def current_branch
@@ -137,6 +168,24 @@ module Sake
       branch_name
     end
   end
+  class Database
+    def truncate_db(db,username = 'root',password = '', host = 'localhost')
+      puts "Truncating Database :  ".bold + db.red.bold
+      puts "** Press enter to continue **".green.bold
+      
+      STDIN.getc
+      connection = Mysql.connect(host,username,password,db)
+      result = connection.real_query("show tables")
+      tables = []
+      result.each_hash { |table| tables << table.values.first }
+      tables.each do |table|
+        puts "Truncating #{table}"
+        connection.real_query("truncate #{table}")
+      end
+      connection.close()
+    end
+  end
+
 end
 @git_help = Sake::Git.new()
 
