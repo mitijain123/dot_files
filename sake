@@ -5,6 +5,7 @@ require "rake/tasklib"
 require "colored"
 require "fileutils"
 require "mysql"
+require "grit"
 
 class Object
   def blank?
@@ -110,6 +111,45 @@ task :gct do
   end
 end
 
+desc "Creating local branch for all branches"
+task :create_branch do
+  repo = Grit::Repo.new(".")
+  local_branches = repo.branches.collect { |x| x.name }
+  puts local_branches.join(",")
+  remote_origin_branches = repo.remotes.collect { |x| x.name =~ /^origin\/(.+)/ ? $1 : nil }.compact
+  puts "********** Remote origin branches are **********"
+  puts remote_origin_branches.join(",")
+  remote_origin_branches.each do |branch_name|
+    if branch_name != 'HEAD' && !local_branches.include?(branch_name)
+      puts "********** Creating branch #{branch_name}"
+      system("git checkout --track -b #{branch_name} origin/#{branch_name}")
+    elsif(branch_name != 'HEAD' && local_branches.include?(branch_name))
+      puts "########## Rebasing branch #{branch_name} with origin/#{branch_name}"
+      system("git checkout #{branch_name}")
+      system("git rebase origin/#{branch_name}")
+    end
+  end
+end
+
+desc "drop a table from particular db"
+task :drop_table do
+  db = ENV['db']
+  table_name = ENV['table']
+
+  username = ENV['user'] || 'root'
+  password = ENV['password'] || ''
+  host = ENV['host'] || 'localhost'
+
+  if !db.blank? && !table_name.blank?
+    puts "Going to drop #{table_name} from #{db}"
+    db_util = Sake::Database.new()
+    db_util.delete_table(db,table_name,username,password,host)
+  else
+    abort("Please supply db and table to delete")
+  end
+end
+
+
 desc "Update all Solaro related repos"
 task :slu do
   solaro_dir = File.join(ENV['HOME'],'checkout','solaro')
@@ -160,6 +200,7 @@ task :run_ruby do
   ruby "~/checkout/solaro/sandbox/benchmark_find_select.rb"
 end
 
+
 module Sake
   class Git
     def current_branch
@@ -174,15 +215,27 @@ module Sake
       puts "** Press enter to continue **".green.bold
       
       STDIN.getc
-      connection = Mysql.connect(host,username,password,db)
-      result = connection.real_query("show tables")
-      tables = []
-      result.each_hash { |table| tables << table.values.first }
-      tables.each do |table|
-        puts "Truncating #{table}"
-        connection.real_query("truncate #{table}")
+      begin
+        connection = Mysql.connect(host,username,password,db)
+        result = connection.real_query("show tables")
+        tables = []
+        result.each_hash { |table| tables << table.values.first }
+        tables.each do |table|
+          puts "Truncating #{table}"
+          connection.real_query("truncate #{table}")
+        end
+      ensure
+        connection.close()
       end
-      connection.close()
+    end
+
+    def delete_table(db,table_name,username = 'root',password = '',host = 'localhost')
+      begin
+        connection = Mysql.connect(host,username,password,db)
+        result = connection.real_query("drop table #{table_name}")
+      ensure
+        connection.close()
+      end
     end
   end
 
