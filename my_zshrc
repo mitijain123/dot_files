@@ -115,6 +115,7 @@ alias gcp='git cherry-pick'
 alias grst='git reset --hard HEAD'
 alias gf="git fetch"
 alias s="sake"
+alias gitx="open -a GitX.app"
 
 alias psr="ps axu|grep ruby"
 alias ..2="cd ../.."
