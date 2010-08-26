@@ -127,8 +127,11 @@ alias em="/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --no-wait"
 alias sl="cd ~/checkout/solaro/"
 alias sca="cd ~/checkout/securo_admin/"
 alias ls="ls -G"
+alias rss="ruby ./script/console"
 export EDITOR="vim"
 
 export PATH=$HOME/bin:/opt/ruby-enterprise-1.8.7-2010.02/bin:/opt/git/bin:/usr/local/bin:/usr/local/sbin:/usr/local/mysql/bin:/opt/local/bin:/opt/scala/bin:$HOME/android-sdk-mac/tools:$PATH
 
-if [[ -s /Users/hemant/.rvm/scripts/rvm ]] ; then source /Users/hemant/.rvm/scripts/rvm ; fi
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+
+
