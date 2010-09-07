@@ -27,3 +27,6 @@ def pbcopy(string)
   `echo "#{string}" | pbcopy`
   string
 end
+require "rubygems"
+require "hirb"
+Hirb.enable
