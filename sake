@@ -200,6 +200,51 @@ task :run_ruby do
   ruby "~/checkout/solaro/sandbox/benchmark_find_select.rb"
 end
 
+desc "sandbox db"
+task :box_db do
+  db = ENV['db'] || 'sandbox'
+  username = ENV['user'] || 'root'
+  password = ENV['password'] || ''
+  host = ENV['host'] || 'localhost'
+
+  file =<<-EOD
+common: &common
+  adapter: mysql
+  reconnect: false
+  pool: 5
+  host: #{host}
+  username: #{username}
+  password: #{password}
+
+development:
+  <<: *common
+  database: #{db}_development
+
+test:
+  <<: *common
+  database: #{db}_test
+
+production:
+  <<: *common
+  database: #{db}_production
+  EOD
+
+  current_dir = Dir.pwd.split("/").last
+  if(current_dir == 'config')
+    File.open("database.yml","w") { |fl| fl.write(file)}
+  else
+    cd("config") do
+      File.open("database.yml","w") { |fl| fl.write(file)}
+    end
+  end
+  ['production','development','test'].each do |db_env|
+    db_name = "#{db}_#{db_env}"
+    puts "Going to recreate #{db_name}"
+    system("mysqladmin -h #{host} -u #{username} -f drop #{db_name}")
+    system("mysqladmin -h #{host} -u #{username} -f create #{db_name}")
+  end
+end
+
 
 module Sake
   class Git
