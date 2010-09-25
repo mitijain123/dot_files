@@ -26,6 +26,14 @@ PR_NO_COLOUR="%{$terminfo[sgr0]%}"
 
 function precmd() {
     head_info=$(git symbolic-ref HEAD 2> /dev/null)
+    rvm_use=$(rvm info|egrep -C 1 'homes'|grep 'gem'|cut -d\: -f 2|cut -d\" -f 2 )
+    
+    if [[ $rvm_use =~ 'not set' ]]; then
+	rvm_flag='system'
+    else
+	rvm_flag=$rvm_use[(ws:/:)-1]
+    fi
+    RPROMPT='$PR_RED$rvm_flag$PR_NO_COLOUR'
     if [[ $head_info =~ '^refs*' ]]; then
 	branch_name=$head_info[(ws:/:)-1]
 	output=$(git diff-files --exit-code --quiet)
@@ -134,3 +142,4 @@ export PATH=$HOME/bin:/opt/ruby-enterprise-1.8.7-2010.02/bin:/opt/git/bin:/usr/l
 
 
 
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"

@@ -28,5 +28,3 @@ def pbcopy(string)
   string
 end
 require "rubygems"
-require "hirb"
-Hirb.enable
