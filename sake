@@ -180,6 +180,28 @@ task :sl do
   end
 end
 
+desc "Update rails and arel"
+task :ru do
+  rails_dir = File.join(ENV['HOME'],'checkout','rails')
+  cd(rails_dir) do
+    system("git fetch")
+    system("git fetch upstream")
+    system("git rebase upstream/master")
+  end
+
+  arel_dir = File.join(ENV['HOME'],'checkout','arel')
+  cd(arel_dir) do
+    system("git fetch")
+    Rake.application.invoke_task('gb')
+  end
+
+  rack_dir = File.join(ENV['HOME'],'checkout','rack')
+  cd(rack_dir) do
+    system("git fetch")
+    Rake.application.invoke_task('gb')
+  end
+end
+
 desc "truncate db"
 task :dbt do
   db = ENV['db']
